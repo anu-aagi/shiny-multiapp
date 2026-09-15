@@ -1,0 +1,208 @@
+/* ANU page styling, shared in spirit with the hub and the MET Explorer.
+   Each app is copied into its own image on its own, so each keeps its own
+   copy of this file rather than sharing one.
+
+   Public Sans, ANU gold (#BE830E) as a highlight only, black and white doing
+   the structural work. The chart colours are set in R/theme.R -- gold is not
+   a safe basis for a categorical or diverging data scale. */
+
+:root {
+  --anu-gold: #BE830E;
+  --anu-gold-tint: #F5EDDE;
+  --anu-black: #000000;
+  --anu-white: #FFFFFF;
+  --anu-unigrey: #333333;
+  --anu-rule: #d5d5d5;
+  --anu-muted: #5c5c5c;
+  --anu-plane: #fafafa;
+}
+
+body {
+  background: var(--anu-white);
+  color: var(--anu-unigrey);
+  font-family: 'Public Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI',
+               Roboto, Helvetica, Arial, sans-serif;
+  font-size: 15px;
+  line-height: 1.55;
+  margin: 0;
+}
+
+/* fluidPage wraps everything in a padded container we don't want */
+.container-fluid { padding: 0; }
+
+/* Nothing in these apps is bold. Public Sans at 400, with 500 carrying the
+   hierarchy; headings, table headers and <b> would otherwise inherit the
+   browser's bold. */
+b, strong, th, label, legend, optgroup, .btn, dt,
+h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6 { font-weight: 500; }
+
+.skip-link {
+  position: absolute; left: -9999px; top: 0;
+  background: var(--anu-gold); color: var(--anu-black);
+  padding: 10px 16px; font-weight: 500; z-index: 20;
+}
+.skip-link:focus { left: 0; color: var(--anu-black); }
+
+/* ---- Masthead ----------------------------------------------------------- */
+.anu-masthead {
+  background: var(--anu-black);
+  border-bottom: 4px solid var(--anu-gold);
+}
+.anu-masthead-inner {
+  max-width: 1320px; margin: 0 auto; padding: 18px 32px;
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 16px; flex-wrap: wrap;
+}
+.anu-mark { display: flex; align-items: center; gap: 16px; text-decoration: none; }
+.anu-mark:hover, .anu-mark:focus { text-decoration: none; }
+.anu-mark-rule {
+  width: 4px; align-self: stretch; min-height: 34px;
+  background: var(--anu-gold); flex: none;
+}
+.anu-mark-text {
+  color: var(--anu-white); font-weight: 500; font-size: 15px; line-height: 1.25;
+}
+.anu-mark-text .anu-mark-the {
+  display: block; font-weight: 400; font-size: 11px; letter-spacing: 0.14em;
+  text-transform: uppercase; color: #c9c9c9; margin-bottom: 2px;
+}
+.back-link {
+  color: #d4d4d4; font-size: 13px; font-weight: 500; text-decoration: none;
+  border-bottom: 2px solid transparent; padding-bottom: 2px; white-space: nowrap;
+}
+.back-link:hover, .back-link:focus {
+  color: var(--anu-white); text-decoration: none;
+  border-bottom-color: var(--anu-gold);
+}
+
+/* ---- Title band --------------------------------------------------------- */
+.anu-band { background: var(--anu-gold-tint); border-bottom: 1px solid #e6dcc7; }
+.anu-band-inner { max-width: 1320px; margin: 0 auto; padding: 32px 32px 28px; }
+h1.app-title {
+  font-size: 32px; font-weight: 500; line-height: 1.15;
+  letter-spacing: -0.015em; color: var(--anu-black); margin: 0 0 8px;
+}
+p.app-lede {
+  font-size: 16px; color: var(--anu-unigrey); margin: 0; max-width: 64ch;
+}
+
+/* ---- Body --------------------------------------------------------------- */
+.app-body { max-width: 1320px; margin: 0 auto; padding: 28px 32px 56px; }
+.well {
+  background: var(--anu-white); border: 1px solid var(--anu-rule);
+  border-left: 4px solid var(--anu-black); border-radius: 0;
+  box-shadow: none; padding: 20px;
+}
+.control-label {
+  font-size: 11px; font-weight: 500; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--anu-black);
+}
+.shiny-input-container { margin-bottom: 18px; }
+.btn-default {
+  border-radius: 0; border: 1px solid var(--anu-black);
+  background: var(--anu-white); color: var(--anu-black);
+  font-weight: 500; font-size: 13px;
+}
+.btn-default:hover, .btn-default:focus {
+  background: var(--anu-gold-tint); border-color: var(--anu-black);
+  color: var(--anu-black);
+}
+.form-control, .selectize-input { border-radius: 0; border-color: var(--anu-rule); }
+.side-note {
+  font-size: 12.5px; color: var(--anu-muted); line-height: 1.6;
+  border-left: 2px solid var(--anu-gold); padding-left: 10px;
+  margin: -8px 0 18px;
+}
+
+/* ---- Tabs --------------------------------------------------------------- */
+.nav-tabs { border-bottom: 1px solid var(--anu-rule); }
+.nav-tabs > li > a {
+  color: var(--anu-muted); border: none; border-radius: 0;
+  font-size: 14px; font-weight: 500; padding: 9px 16px;
+}
+.nav-tabs > li > a:hover {
+  background: var(--anu-gold-tint); border: none; color: var(--anu-black);
+}
+.nav-tabs > li.active > a, .nav-tabs > li.active > a:hover,
+.nav-tabs > li.active > a:focus {
+  color: var(--anu-black); background: none; border: none;
+  box-shadow: inset 0 -3px 0 var(--anu-gold);
+}
+.tab-content { padding-top: 22px; }
+.panel-note {
+  font-size: 14px; color: var(--anu-unigrey); max-width: 76ch;
+  margin: 0 0 20px; line-height: 1.6;
+}
+
+/* ---- Stat tiles --------------------------------------------------------- */
+.tile-row { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 22px; }
+.tile {
+  flex: 1 1 160px; background: var(--anu-white);
+  border: 1px solid var(--anu-rule); border-left: 4px solid var(--anu-gold);
+  padding: 13px 16px;
+}
+.tile .label {
+  font-size: 10px; font-weight: 500; text-transform: uppercase;
+  letter-spacing: 0.1em; color: var(--anu-muted);
+}
+.tile .value {
+  font-size: 26px; font-weight: 500; color: var(--anu-black); line-height: 1.25;
+}
+.tile .sub { font-size: 13px; color: var(--anu-muted); }
+
+/* ---- Hover readout ------------------------------------------------------ */
+.viz-wrap { position: relative; }
+.viz-tip {
+  background: var(--anu-black); color: var(--anu-white); padding: 9px 11px;
+  font-size: 12.5px; line-height: 1.5; pointer-events: none;
+  border-left: 3px solid var(--anu-gold);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+}
+.viz-tip b { font-weight: 500; }
+
+/* ---- Tables ------------------------------------------------------------- */
+table.data-table {
+  width: 100%; border-collapse: collapse; font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+table.data-table th {
+  text-align: left; font-weight: 500; color: var(--anu-black); font-size: 11px;
+  text-transform: uppercase; letter-spacing: 0.08em;
+  border-bottom: 2px solid var(--anu-black); padding: 9px 10px;
+}
+table.data-table td { border-bottom: 1px solid #ececec; padding: 8px 10px; }
+table.data-table tr:hover td { background: var(--anu-plane); }
+table.data-table tr.current td { background: var(--anu-gold-tint); }
+.table-scroll { overflow-x: auto; max-height: 560px; overflow-y: auto; }
+
+/* ---- Method note -------------------------------------------------------- */
+.method p {
+  font-size: 14.5px; color: var(--anu-unigrey); line-height: 1.7; max-width: 78ch;
+}
+.method h4 {
+  font-size: 12px; font-weight: 500; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--anu-black); margin-top: 26px;
+  padding-bottom: 6px; border-bottom: 3px solid var(--anu-gold);
+  display: inline-block;
+}
+.method code {
+  background: var(--anu-gold-tint); color: var(--anu-black);
+  font-size: 13px; border-radius: 0;
+}
+
+/* ---- Footer ------------------------------------------------------------- */
+.anu-footer {
+  background: var(--anu-black); color: #9a9a9a;
+  border-top: 4px solid var(--anu-gold);
+}
+.anu-footer-inner {
+  max-width: 1320px; margin: 0 auto; padding: 22px 32px; font-size: 13px;
+}
+
+@media (max-width: 640px) {
+  .anu-masthead-inner, .anu-band-inner, .app-body, .anu-footer-inner {
+    padding-left: 20px; padding-right: 20px;
+  }
+  h1.app-title { font-size: 25px; }
+  .anu-band-inner { padding-top: 24px; padding-bottom: 22px; }
+}

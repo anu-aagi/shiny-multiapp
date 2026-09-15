@@ -1,0 +1,13 @@
+.git
+.gitignore
+.github
+.claude
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+*.Rproj
+README.md
+docker-compose.yml
+docker/
+Dockerfile
