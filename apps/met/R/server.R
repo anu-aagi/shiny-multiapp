@@ -1,5 +1,10 @@
 server <- function(input, output, session) {
 
+  # Browsers throttle/suspend background tabs and drop the websocket; without
+  # this the reconnect grace period is off and Shiny shows a dead gray
+  # overlay requiring a full reload instead of reconnecting transparently.
+  session$allowReconnect(TRUE)
+
   # Cap the highlight selector at four series -- past that, line identity
   # stops being readable even with direct labels.
   observeEvent(input$focus, ignoreNULL = FALSE, {

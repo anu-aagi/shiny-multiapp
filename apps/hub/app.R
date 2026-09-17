@@ -74,8 +74,18 @@ ui <- fluidPage(
       line-height: 1.55;
       margin: 0;
     }
-    /* fluidPage wraps everything in a padded container we don't want */
-    .container-fluid { padding: 0; }
+    /* fluidPage wraps everything in a padded container we don't want.
+       It's also given flex-column layout so the footer sits at the
+       bottom of the viewport instead of floating mid-page on short
+       content, rather than being pushed down by real page height. */
+    html, body { height: 100%; }
+    .container-fluid {
+      padding: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    .hub-wrap { flex: 1 0 auto; }
 
     /* Nothing in these apps is bold. Public Sans at 400, with 500 carrying the
        hierarchy; headings, table headers and <b> would otherwise inherit the
@@ -361,6 +371,11 @@ ui <- fluidPage(
   )
 )
 
-server <- function(input, output, session) {}
+server <- function(input, output, session) {
+  # Browsers throttle/suspend background tabs and drop the websocket; without
+  # this the reconnect grace period is off and Shiny shows a dead gray
+  # overlay requiring a full reload instead of reconnecting transparently.
+  session$allowReconnect(TRUE)
+}
 
 shinyApp(ui, server)

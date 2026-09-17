@@ -37,6 +37,11 @@ RUN R -q -e "ver <- '${PUBLIC_SANS_VERSION}'; \
     && fc-cache -f \
     && fc-list | grep -q 'Public Sans'
 
+# The stylesheet every app shares. It goes beside /srv/app rather than inside
+# it so that the "../www" the apps register as a resource path resolves the
+# same way here as it does in the repo, where it is apps/www next to apps/trial.
+COPY apps/www /srv/www
+
 # Which app under apps/ this image serves. Set per-service in docker-compose.yml.
 ARG APP
 COPY apps/${APP} /srv/app

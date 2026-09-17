@@ -1,6 +1,14 @@
 # Page chrome: masthead, gold title band, body, footer, and the stat tiles.
-# The same markup is in every app -- each app is copied into its own image on
-# its own, so each keeps its own copy rather than sharing one file.
+# The same markup is in every app, so it stays in step with the shared
+# stylesheet below.
+
+# One stylesheet serves every app, from a www directory one level above this
+# one: apps/www when the app is run from the repo, /srv/www in the image (the
+# Dockerfile puts it there, beside /srv/app, so the same relative path works).
+# Shiny only serves the app's own directory, so the folder is registered as a
+# resource prefix; the href stays relative, or it would miss the /trial/ path
+# the proxy serves the app under.
+addResourcePath("assets", normalizePath(file.path("..", "www"), mustWork = TRUE))
 
 # Wraps the app's content in the ANU page furniture. `...` is the body.
 anu_page <- function(browser_title, title, lede, ...) {
@@ -14,7 +22,7 @@ anu_page <- function(browser_title, title, lede, ...) {
         "https://fonts.googleapis.com/css2?family=Public+Sans:",
         "wght@400;500&display=swap"
       )),
-      tags$link(rel = "stylesheet", href = "app.css"),
+      tags$link(rel = "stylesheet", href = "assets/app.css"),
       # Restoring this page from the browser's back/forward cache leaves a dead
       # websocket and Shiny's grey disconnect overlay; force a fresh load.
       tags$script(HTML(

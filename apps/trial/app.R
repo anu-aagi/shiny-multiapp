@@ -34,6 +34,6 @@ for (f in c(
   source(file.path("R", paste0(f, ".R")), local = TRUE)
 }
 
-# Page styling lives in www/app.css.
+# Page styling lives in apps/www/app.css, shared with the other app.
 
 shinyApp(ui, server)

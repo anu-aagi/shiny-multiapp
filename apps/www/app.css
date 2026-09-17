@@ -1,6 +1,6 @@
-/* ANU page styling, shared in spirit with the hub and the MET Explorer.
-   Each app is copied into its own image on its own, so each keeps its own
-   copy of this file rather than sharing one.
+/* ANU page styling for the analysis apps. One copy, served by both: each app
+   registers this directory as the "assets" resource path (see R/layout.R), so
+   a change here reaches every app at once. The hub styles itself inline.
 
    Public Sans, ANU gold (#BE830E) as a highlight only, black and white doing
    the structural work. The chart colours are set in R/theme.R -- gold is not

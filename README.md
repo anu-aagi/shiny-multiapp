@@ -11,7 +11,8 @@ shiny-multiapp/
 ├── apps/
 │   ├── hub/app.R          # landing page listing the apps
 │   ├── met/               # multi-environment trial explorer (needs ggplot2)
-│   └── trial/             # single-trial spatial analysis (needs ggplot2)
+│   ├── trial/             # single-trial spatial analysis (needs ggplot2)
+│   └── www/app.css        # the stylesheet both analysis apps share
 ├── Dockerfile             # one parameterised image, built once per app
 ├── docker-compose.yml     # hub + met + trial + nginx proxy
 └── docker/
@@ -24,17 +25,25 @@ The two analysis apps are split the same way:
 ```
 apps/trial/
 ├── app.R                  # what the app is; attaches packages, sources R/, calls shinyApp()
-├── R/
-│   ├── _disable_autoload.R  # see below
-│   ├── analysis.R         # the statistics, with no Shiny in it
-│   ├── constants.R        # sizes and the hub link
-│   ├── data.R             # the simulated data
-│   ├── layout.R           # ANU page chrome and small UI helpers
-│   ├── server.R           # reactives and outputs
-│   ├── theme.R            # chart palette and ggplot theme
-│   └── ui.R               # the page
-└── www/app.css            # page styling
+└── R/
+    ├── _disable_autoload.R  # see below
+    ├── analysis.R         # the statistics, with no Shiny in it
+    ├── constants.R        # sizes and the hub link
+    ├── data.R             # the simulated data
+    ├── layout.R           # ANU page chrome, small UI helpers, the stylesheet link
+    ├── server.R           # reactives and outputs
+    ├── theme.R            # chart palette and ggplot theme
+    └── ui.R               # the page
 ```
+
+Page styling is not in either app: both serve `apps/www/app.css`, so a change
+to it reaches both at once. Shiny only serves an app's own directory, so
+`R/layout.R` registers the folder one level up as a resource path
+(`addResourcePath("assets", "../www")`) and links it as `assets/app.css` — a
+relative href, so it still resolves under the `/trial/` path the proxy serves
+the app under. The `Dockerfile` copies that folder to `/srv/www`, beside
+`/srv/app`, so the same relative path works inside the image. The hub styles
+itself inline and does not use it.
 
 `app.R` sources `R/` itself, in an order written down in that file, rather than
 using Shiny's auto-loading. Auto-loading sorts the directory alphabetically,
@@ -97,12 +106,14 @@ The only requirement is Docker. R and the packages live inside the images.
 docker compose up --build
 ```
 
-Then open <http://localhost:8080> — it redirects to the hub, and the cards
-take you to `/met/` and `/trial/`.
+Then open <http://localhost> — it redirects to the hub, and the cards take you
+to `/met/` and `/trial/`. If something else already holds port 80, pick
+another: `HTTP_PORT=8080 docker compose up --build`, then
+<http://localhost:8080>.
 
 Each app runs in its own container on its own internal port 3838. An nginx
-container is the only thing published to the host (port 8080); it routes each
-path to the right app and carries Shiny's websocket.
+container is the only thing published to the host; it routes each path to the
+right app and carries Shiny's websocket.
 
 Stop with `docker compose down`. Later runs skip the rebuild:
 
@@ -174,7 +185,8 @@ The folder name under `apps/` is the service name, the URL path and the build
 argument, so keep the four steps below in agreement.
 
 1. Drop a new folder in `apps/` with its own `app.R` (and, for anything bigger
-   than a page or two, the `R/` + `www/` split the two analysis apps use).
+   than a page or two, the `R/` split the two analysis apps use — including
+   their `R/layout.R` if it should share `apps/www/app.css`).
 2. Add a service to `docker-compose.yml`, copying an existing one and changing
    `APP: <name>` and the service key, and list it under the proxy's
    `depends_on`.
