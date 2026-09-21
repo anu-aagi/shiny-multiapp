@@ -204,19 +204,16 @@ ui <- fluidPage(
       display: flex;
       align-items: center;
       gap: 18px;
-      padding: 22px 24px;
+      padding: 21px 24px;
       background: var(--anu-white);
       border: 1px solid var(--anu-rule);
-      border-left: 4px solid var(--anu-black);
       text-decoration: none;
       color: inherit;
-      transition: border-left-color 0.15s ease, box-shadow 0.15s ease,
-                  transform 0.15s ease;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
     }
     .app-card:hover, .app-card:focus-visible {
-      border-left-color: var(--anu-gold);
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-      transform: translateY(-2px);
+      border-color: var(--anu-black);
+      box-shadow: 3px 3px 0 var(--anu-gold);
       text-decoration: none;
       color: inherit;
     }

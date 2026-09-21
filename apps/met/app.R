@@ -18,13 +18,13 @@ library(ggplot2)
 # never sources global.R for an app.R-style app -- which leaves nowhere to
 # attach ggplot2 before R/theme.R needs it.
 for (f in c(
-  "constants",  # years, variety count and the hub link
-  "theme",      # chart palette and ggplot theme
-  "analysis",   # the factor analytic decomposition and variety summary
-  "data",       # the simulated trial series (fits a model for its defaults)
-  "layout",     # ANU page chrome and small UI helpers
-  "server",     # reactives and outputs
-  "ui"          # the page itself (needs the series above)
+  "constants", # years, variety count and the hub link
+  "theme", # chart palette and ggplot theme
+  "analysis", # the factor analytic decomposition and variety summary
+  "data", # the simulated trial series (fits a model for its defaults)
+  "layout", # ANU page chrome and small UI helpers
+  "server", # reactives and outputs
+  "ui" # the page itself (needs the series above)
 )) {
   source(file.path("R", paste0(f, ".R")), local = TRUE)
 }
