@@ -15,6 +15,7 @@ deploy/
 ├── shiny-trial.container
 ├── shiny-proxy.container   # nginx; the only unit publishing host ports
 ├── deploy.sh               # rebuild images, restart units, health check
+├── telemetry.sh            # usage per app, from the proxy's log
 └── AUTOMATION.md           # how all of the above actually works
 ```
 
@@ -72,6 +73,54 @@ ssh -t 10.40.87.20 'sudo ~/shiny-multiapp/deploy/deploy.sh'
 `/opt/shiny-proxy/`, restarts the units, and fails loudly if any app does not
 return 200. The R package versions come from the pinned `CRAN_SNAPSHOT` in the
 `Dockerfile`, so a deploy never silently changes them.
+
+## Usage numbers
+
+nginx writes a JSON line to the journal for every Shiny session and page load
+(see "Usage telemetry" in `docker/nginx.conf`), for every app behind it, with no
+change to the apps. `telemetry.sh` sums it up:
+
+```bash
+ssh -t 10.40.87.20 'sudo ~/shiny-multiapp/deploy/telemetry.sh'               # last 7 days
+ssh -t 10.40.87.20 'sudo ~/shiny-multiapp/deploy/telemetry.sh "30 days ago"'
+```
+
+```
+Records from 2026-10-25 15:38 to 2026-10-27 15:28 (Australia/Canberra)
+
+app    sessions  median  p90    longest  page loads  networks  5xx
+hub    1         1s      1s     1s       1           1         0
+met    4         3s      1h06m  1h06m    2           3         2
+trial  2         2s      1m01s  1m01s    2           2         0
+
+Sessions by day
+date        hub  met  trial
+2026-10-25  0    2    0
+...
+```
+
+- **sessions** are Shiny websockets, and the time columns are how long they
+  stayed open. A websocket needs JavaScript, so crawlers do not open one. A
+  session is counted once it ends, and a tab that the browser suspends and
+  then reconnects counts twice.
+- **page loads** leave out known robots, curl (so `deploy.sh`'s health checks
+  are not counted) and requests with no user agent, which is what a load
+  balancer health monitor usually sends.
+- **networks** are distinct client networks (the address with its last octet
+  zeroed; the full address is never written). Behind the F5 every visitor
+  arrives from the F5's own address, so this reads 1 until the `real_ip` lines
+  in `docker/nginx.conf` are filled in with the F5's source range.
+- **5xx** is every server error for that app, including a 502 from the proxy
+  when the app is down.
+
+How far back it reaches is set by the journal, which keeps a capped amount of
+history (by default 10% of `/var/log`) shared with the rest of the system. The
+first line says what the window actually holds. The raw records are there to
+query directly:
+
+```bash
+sudo journalctl -u shiny-proxy -o cat --since today | jq -cR 'fromjson? | select(.status >= 500)'
+```
 
 ## When something is wrong
 

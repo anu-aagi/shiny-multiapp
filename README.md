@@ -17,7 +17,7 @@ shiny-multiapp/
 ├── Dockerfile             # one parameterised image, built once per app
 ├── docker-compose.yml     # hub + met + trial + nginx proxy
 ├── docker/
-│   ├── nginx.conf         # the HTTP listener and the redirect to HTTPS
+│   ├── nginx.conf         # the HTTP listener, the redirect to HTTPS, the usage log
 │   ├── nginx-tls.conf     # the HTTPS listener (deployed VM only)
 │   ├── app_routes.conf    # routes /hub/, /met/, /trial/ -- used by both
 │   └── shiny_proxy.conf   # shared websocket/proxy headers
