@@ -26,8 +26,9 @@ ui <- anu_page(
       ),
       tags$p(
         class = "side-note",
-        "Simulated data. ", tags$b(textOutput("n_env", inline = TRUE)),
-        " environments × ", n_var, " varieties."
+        "Western Australian spring wheat, Perry & D'Antuono (1989). ",
+        tags$b(textOutput("n_env", inline = TRUE)),
+        " environments × ", n_var, " cultivars."
       ),
       downloadButton("dl", "Download variety summary", class = "btn-sm")
     ),

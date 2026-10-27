@@ -1,7 +1,7 @@
 # Chart colours and the ggplot theme. The page chrome is in www/app.css.
 #
 # The series colours are a colour-vision-validated set, deliberately separate
-# from the ANU gold in the page styling -- gold is not a safe basis for a
+# from the ANU gold in the page styling gold is not a safe basis for a
 # categorical or diverging data scale.
 
 pal <- list(
@@ -13,7 +13,7 @@ pal <- list(
 )
 
 # renderPlot() rasterises server-side, so the graphics device cannot use the
-# web font the browser loads -- Public Sans has to be installed on the machine.
+# web font the browser loads Public Sans has to be installed on the machine.
 # The Docker image installs it; fall back to the device default anywhere it is
 # missing rather than emitting a font warning per plot.
 plot_family <- local({

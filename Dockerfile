@@ -1,4 +1,7 @@
-FROM rocker/r-ver:4.5.3
+# Registry is spelled out because Podman (the RHEL deployment target) enforces
+# short-name resolution and will not guess docker.io. Docker treats the
+# qualified and unqualified forms identically.
+FROM docker.io/rocker/r-ver:4.5.3
 
 # Cairo/font libs so headless renderPlot() can rasterise PNGs (the ggplot apps).
 RUN apt-get update && apt-get install -y --no-install-recommends \

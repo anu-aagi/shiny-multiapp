@@ -11,8 +11,12 @@
 # the residuals left on the ground. Adjusted means from an analysis like this
 # are the input to a multi-environment analysis -- see the MET Explorer.
 #
-# Data is SIMULATED with fixed seeds and a known spatial trend, so the right
-# answer is available for comparison. Nothing here is a real trial result.
+# Six of the trials are real published results -- 64 corn hybrids in six North
+# Carolina counties, from Besag & Higdon (1999) by way of the agridat package.
+# Three more are simulated with fixed seeds from a known spatial trend, and they
+# stay because they are the only place the true entry values are available: they
+# are how you find out which of the diagnostics to trust on the real six, where
+# there is nothing to check against. See R/data.R.
 
 library(shiny)
 library(ggplot2)
@@ -23,10 +27,10 @@ library(ggplot2)
 # never sources global.R for an app.R-style app -- which leaves nowhere to
 # attach ggplot2 before R/theme.R needs it.
 for (f in c(
-  "constants",  # trial geometry and the hub link
+  "constants",  # where the data file is, simulator sizes, the hub link
   "theme",      # chart palette and ggplot theme
   "analysis",   # the spatial models, least-squares means, diagnostics
-  "data",       # the three simulated trials
+  "data",       # the six real trials and the three simulated ones
   "layout",     # ANU page chrome and small UI helpers
   "server",     # reactives and outputs
   "ui"          # the page itself (needs the models and trials above)

@@ -1,0 +1,39 @@
+# The nginx reverse proxy. The only unit that publishes ports to the host:
+# 80 and 443 for the ANU F5 load balancer, and 8080 for direct access from the
+# ANU network while the public hostname is being set up.
+#
+# After= (ordering) and Wants= (a soft dependency) rather than Requires=,
+# deliberately. nginx refuses to start if a hostname in proxy_pass cannot be
+# resolved, so the apps must come up first -- but with Requires= a single
+# broken app would stop the proxy from starting at all, taking every other app
+# down with it. Wants= plus Restart=always means the proxy keeps retrying
+# instead, and recovers on its own once the apps are there.
+
+[Unit]
+Description=nginx reverse proxy for the Shiny applications
+After=network-online.target shiny-hub.service shiny-met.service shiny-trial.service
+Wants=network-online.target shiny-hub.service shiny-met.service shiny-trial.service
+
+[Container]
+ContainerName=proxy
+Image=localhost/nginx:1.27-alpine
+Network=shiny.network
+
+PublishPort=80:80
+PublishPort=443:443
+PublishPort=8080:80
+
+# ,z is the SELinux relabel -- without it, Enforcing mode blocks nginx from
+# reading its own configuration and the container starts and then fails.
+Volume=/opt/shiny-proxy/nginx.conf:/etc/nginx/conf.d/default.conf:ro,z
+Volume=/opt/shiny-proxy/nginx-tls.conf:/etc/nginx/conf.d/tls.conf:ro,z
+Volume=/opt/shiny-proxy/app_routes.conf:/etc/nginx/app_routes.conf:ro,z
+Volume=/opt/shiny-proxy/shiny_proxy.conf:/etc/nginx/shiny_proxy.conf:ro,z
+Volume=/opt/shiny-proxy/tls:/etc/nginx/tls:ro,z
+
+[Service]
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target default.target

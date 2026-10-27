@@ -11,10 +11,7 @@ ui <- anu_page(
   sidebarLayout(
     sidebarPanel(
       width = 3,
-      selectInput(
-        "trial", "Trial",
-        choices = setNames(names(trials), vapply(trials, `[[`, "", "label"))
-      ),
+      selectInput("trial", "Trial", choices = trial_choices),
       tags$div(class = "side-note", textOutput("trial_note")),
       radioButtons(
         "model", "Spatial model",
@@ -22,12 +19,13 @@ ui <- anu_page(
         selected = "rcb"
       ),
       tags$div(class = "side-note", textOutput("model_note")),
+      # The fourth layer, the trend that went in, exists only for the simulated
+      # trials, so the server adds and removes it as the trial changes.
       radioButtons(
         "layer", "Field map shows",
         choices = c("Observed yield" = "yield",
                     "Fitted spatial effect" = "spatial",
-                    "Residual" = "resid",
-                    "True trend (simulated)" = "trend"),
+                    "Residual" = "resid"),
         selected = "yield"
       ),
       downloadButton("dl", "Download entry means", class = "btn-sm")
@@ -65,11 +63,12 @@ ui <- anu_page(
         tabPanel(
           "Model choice",
           tags$p(class = "panel-note",
-                 "Every model fitted to this trial. On a real trial the decision",
-                 " rests on the LSD, the repeatability and the neighbour",
-                 " correlation; accuracy against the true genetic values is",
-                 " available here only because the data is simulated, and it",
-                 " shows which of the others are worth trusting."),
+                 "Every model fitted to this trial. On the real trials the",
+                 " decision rests on the LSD, the repeatability and the neighbour",
+                 " correlation, as it does in practice. On the simulated ones the",
+                 " true genetic values are also known, so accuracy can be shown",
+                 " beside those diagnostics -- which is how you find out how far",
+                 " to trust them when it cannot be."),
           plotOutput("compare_plot", height = "300px"),
           tags$hr(),
           uiOutput("compare_table")

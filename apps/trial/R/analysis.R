@@ -23,15 +23,29 @@ models <- list(
                          freedom.")
 )
 
+# The shape of whatever trial has been handed in. Read off the data rather than
+# fixed, because the real trials and the simulated ones are different sizes --
+# and a real trial is short of the plots it lost, so the plot count is not the
+# product of the grid.
+trial_dims <- function(d) {
+  list(
+    n_row = max(d$row), n_col = max(d$col),
+    n_var = length(levels(d$entry)), n_rep = length(levels(d$rep)),
+    n_plot = nrow(d)
+  )
+}
+
 # Lag-1 correlation between the residuals of neighbouring plots, averaged over
 # the two directions. Near zero means the model has taken the spatial structure
 # out; a clearly positive value means trend is still sitting in the residual.
+# Plots the trial is missing stay NA in the grid and drop out of each pair.
 neighbour_cor <- function(d) {
-  m <- matrix(NA_real_, N_ROW, N_COL)
+  g <- trial_dims(d)
+  m <- matrix(NA_real_, g$n_row, g$n_col)
   m[cbind(d$row, d$col)] <- d$resid
   mean(c(
-    cor(as.vector(m[-N_ROW, ]), as.vector(m[-1, ]), use = "complete.obs"),
-    cor(as.vector(m[, -N_COL]), as.vector(m[, -1]), use = "complete.obs")
+    cor(as.vector(m[-g$n_row, ]), as.vector(m[-1, ]), use = "complete.obs"),
+    cor(as.vector(m[, -g$n_col]), as.vector(m[, -1]), use = "complete.obs")
   ))
 }
 
@@ -95,20 +109,24 @@ fit_model <- function(d, key) {
     key = key, label = spec$label, formula = formula(fit), data = d,
     means = means, sigma = sigma(fit), df = dfr, lsd = lsd, h2 = h2,
     aic = AIC(fit), cv = 100 * sigma(fit) / mean(d$yield), n_par = sum(keep),
-    nb = neighbour_cor(d)
+    nb = neighbour_cor(d), dims = trial_dims(d)
   )
 }
 
 # One row per model for the comparison tab. Accuracy is the correlation with
-# the true simulated genetic values -- available only because the data is
-# simulated, but it shows which of the other diagnostics are worth trusting.
-compare_models <- function(d, g_true) {
+# the true genetic values, so it exists only for a simulated trial, where they
+# were the input; on a real trial it is NA and the choice rests on the LSD, the
+# repeatability and the neighbour correlation, as it does in practice. Keeping
+# both side by side is the point: the simulated trials show which of those
+# diagnostics were worth trusting.
+compare_models <- function(d, g_true = NULL) {
   do.call(rbind, lapply(names(models), function(k) {
     f <- fit_model(d, k)
     data.frame(
       key = k, model = f$label, n_par = f$n_par, sigma = f$sigma,
       lsd = f$lsd, h2 = f$h2, nb = f$nb, aic = f$aic,
-      accuracy = cor(f$means$adjusted, g_true[f$means$entry]),
+      accuracy = if (is.null(g_true)) NA_real_ else
+        cor(f$means$adjusted, g_true[f$means$entry]),
       stringsAsFactors = FALSE
     )
   }))

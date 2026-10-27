@@ -1,0 +1,15 @@
+# The container network, as a Quadlet unit so systemd creates it before the
+# containers that join it.
+#
+# The subnet is pinned rather than left to podman's pool because the containers
+# below take fixed addresses from it -- see shiny-met.container for why. It is
+# in 172.16/12 to stay clear of podman's own 10.88/10.89 defaults and of ANU's
+# 10.x estate.
+
+[Unit]
+Description=Network for the Shiny application containers
+
+[Network]
+NetworkName=shiny
+Subnet=172.30.17.0/24
+Gateway=172.30.17.1

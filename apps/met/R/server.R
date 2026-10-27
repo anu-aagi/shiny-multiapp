@@ -22,7 +22,11 @@ server <- function(input, output, session) {
     fa_fit(met$Y[, e$env, drop = FALSE], as.integer(input$k))
   })
 
-  varieties <- reactive(variety_summary(fit()))
+  varieties <- reactive({
+    d <- variety_summary(fit())
+    d$released <- met$yor[d$variety]
+    d
+  })
   focus <- reactive(intersect(input$focus, met$variety))
 
   output$n_env <- renderText(nrow(env_sub()))
@@ -102,6 +106,7 @@ server <- function(input, output, session) {
       tags$tr(
         class = if (r$variety %in% focus()) "current" else NULL,
         tags$td(r$rank), tags$td(tags$b(r$variety)),
+        tags$td(r$released),
         tags$td(sprintf("%.2f", r$predicted)),
         tags$td(sprintf("%+.2f", r$op)),
         tags$td(sprintf("%+.1f%%", r$op_pct)),
@@ -110,8 +115,8 @@ server <- function(input, output, session) {
       )
     })
     data_table(
-      c("Rank", "Variety", "Predicted t/ha", "OP t/ha", "OP %", "RMSD",
-        "Responsiveness"),
+      c("Rank", "Cultivar", "Released", "Predicted t/ha", "OP t/ha", "OP %",
+        "RMSD", "Responsiveness"),
       rows
     )
   })
@@ -265,13 +270,27 @@ server <- function(input, output, session) {
         "to commit."
       ))),
       tags$h4("Data"),
+      tags$p(HTML(paste0(
+        "Real published yields: 28 of the most significant Western Australian ",
+        "spring wheat cultivars released between 1860 and 1982, grown in 20 ",
+        "trials over 1979-1982 in the central and eastern wheatbelt. Yields are ",
+        "trial means, published in kg/ha and shown here as t/ha. The five ",
+        "cultivars with a missing trial are left out, because the decomposition ",
+        "needs a complete table, leaving ", n_var, " measured in all 20 ",
+        "environments. Site labels are the source's three-letter codes; Wongan ",
+        "Hills (Won) was sown early and late in 1979 and 1980, and the Merredin ",
+        "(Mer) 1979 pair is probably the same, so those labels are suffixed. ",
+        "The series is nearly 40 years old and says nothing about current ",
+        "varieties: it is a worked example, not a recommendation."
+      ))),
+      tags$h4("References"),
       tags$p(paste0(
-        "All values are simulated from a known FA(2) process with a fixed seed. ",
-        "Site names are real locations but the yields, varieties and ",
-        "loadings are invented; nothing here should be read as a variety ",
-        "recommendation."
+        "Perry MW, D'Antuono MF (1989). Yield improvement and associated ",
+        "characteristics of some Australian spring wheat cultivars introduced ",
+        "between 1860 and 1982. Australian Journal of Agricultural Research ",
+        "40:457-472. Used with permission of Mario D'Antuono and CSIRO ",
+        "Publishing."
       )),
-      tags$h4("Reference"),
       tags$p(paste0(
         "Smith AB, Ganesalingam A, Kuchel H, Cullis BR (2015). Factor analytic ",
         "mixed models for the provision of grower information from national ",

@@ -1,0 +1,21 @@
+# Field Trial Analyser. See shiny-met.container for why the IP is fixed and
+# why RunInit=yes is here.
+
+[Unit]
+Description=Field Trial Analyser Shiny application
+After=network-online.target
+Wants=network-online.target
+
+[Container]
+ContainerName=trial
+Image=localhost/shiny-trial:latest
+Network=shiny.network
+IP=172.30.17.13
+RunInit=yes
+
+[Service]
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target default.target

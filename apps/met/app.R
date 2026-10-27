@@ -6,8 +6,10 @@
 # measure (RMSD). Growers read the two together. Method follows Smith,
 # Ganesalingam, Kuchel & Cullis (2015) -- see R/analysis.R and the Method tab.
 #
-# Data is SIMULATED from a known FA(2) process with a fixed seed. Nothing here
-# is a real variety or a real trial result.
+# The data is real published trial results: 23 Western Australian spring wheat
+# cultivars in 20 trials over 1979-1982, from Perry & D'Antuono (1989) by way of
+# the agridat package -- see R/data.R. It is four decades old and is here as a
+# worked example, not as advice on current varieties.
 
 library(shiny)
 library(ggplot2)
@@ -18,10 +20,10 @@ library(ggplot2)
 # never sources global.R for an app.R-style app -- which leaves nowhere to
 # attach ggplot2 before R/theme.R needs it.
 for (f in c(
-  "constants", # years, variety count and the hub link
+  "constants", # where the data file is, and the hub link
   "theme", # chart palette and ggplot theme
   "analysis", # the factor analytic decomposition and variety summary
-  "data", # the simulated trial series (fits a model for its defaults)
+  "data", # reads the trial series (fits a model for its defaults)
   "layout", # ANU page chrome and small UI helpers
   "server", # reactives and outputs
   "ui" # the page itself (needs the series above)

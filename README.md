@@ -13,23 +13,35 @@ shiny-multiapp/
 │   ├── met/               # multi-environment trial explorer (needs ggplot2)
 │   ├── trial/             # single-trial spatial analysis (needs ggplot2)
 │   └── www/app.css        # the stylesheet both analysis apps share
+├── data-raw/extract.R     # pulls the published data into the apps' CSVs
 ├── Dockerfile             # one parameterised image, built once per app
 ├── docker-compose.yml     # hub + met + trial + nginx proxy
-└── docker/
-    ├── nginx.conf         # routes /hub/, /met/, /trial/
-    └── shiny_proxy.conf   # shared websocket/proxy headers
+├── docker/
+│   ├── nginx.conf         # the HTTP listener and the redirect to HTTPS
+│   ├── nginx-tls.conf     # the HTTPS listener (deployed VM only)
+│   ├── app_routes.conf    # routes /hub/, /met/, /trial/ -- used by both
+│   └── shiny_proxy.conf   # shared websocket/proxy headers
+└── deploy/                # systemd (Quadlet) units and deploy.sh for the VM
 ```
+
+Running it on the ANU VM is covered separately. [deploy/README.md](deploy/README.md)
+is the runbook — install it, deploy a change, check it is up — and
+[deploy/AUTOMATION.md](deploy/AUTOMATION.md) explains how that works: the
+containers are managed by systemd so they survive a reboot and restart
+themselves on a crash, and `deploy/deploy.sh` rebuilds, restarts and health
+checks them in one step.
 
 The two analysis apps are split the same way:
 
 ```
 apps/trial/
 ├── app.R                  # what the app is; attaches packages, sources R/, calls shinyApp()
+├── data/                  # the trial data as committed CSV
 └── R/
     ├── _disable_autoload.R  # see below
     ├── analysis.R         # the statistics, with no Shiny in it
-    ├── constants.R        # sizes and the hub link
-    ├── data.R             # the simulated data
+    ├── constants.R        # where the data is, simulator sizes, the hub link
+    ├── data.R             # reads the CSV into what the app analyses
     ├── layout.R           # ANU page chrome, small UI helpers, the stylesheet link
     ├── server.R           # reactives and outputs
     ├── theme.R            # chart palette and ggplot theme
@@ -58,8 +70,12 @@ ggplot2 needed — so the statistics can be run and checked on their own:
 ```bash
 Rscript -e "for (f in c('constants','analysis','data')) \
               source(file.path('apps/trial/R', paste0(f, '.R'))); \
-            print(compare_models(sims\$patchy\$data, sims\$patchy\$g_true))"
+            print(compare_models(trials\$C2\$data))"
 ```
+
+An app reads its CSV relative to its own directory, because that is Shiny's
+working directory when it runs; `data_path()` in `R/constants.R` also looks for
+the file from the repository root so the line above works from there too.
 
 ## The apps
 
@@ -78,25 +94,59 @@ provision of grower information from national crop variety testing programs*,
 Theor Appl Genet 128:55–72 ([doi:10.1007/s00122-014-2412-x][smith2015]). The
 paper fits the factor analytic structure inside a mixed model; because the app's
 input is already a table of per-trial means, the same structure is recovered by
-singular value decomposition — identical algebra, no extra package.
+singular value decomposition — identical algebra, no extra package. The cultivar
+table carries each variety's year of release, and on this series the Overall
+Performance score tracks it at r = 0.88: the method recovers a century of
+breeding gain from the trial means alone, which is a useful check that it works.
 
 **Field Trial Analyser** (`apps/trial`) works on a single site. A yield trial
 sits on ground that is never uniform, and the app fits four spatial models —
 from nothing at all through replicate blocks and a smooth surface to a free
 constant per row and range — showing what each does to the entry means, to the
 LSD and repeatability of the trial, and to the residuals left on the field map.
-Three contrasting trials make the point
-that the right model depends on the field: blocking in the wrong direction buys
-nothing, and on a uniform block the elaborate models only spend degrees of
-freedom.
+Nine trials in the dropdown make the point that the right model depends on the
+field: in one county replicate blocking buys nothing at all, in another it does
+all the work and a smooth surface is worse than useless, and in a third the most
+flexible model shaves the residual while making the LSD worse.
 
-Both apps use **simulated** data, generated from a known process with a fixed
-seed, so the true answer is available to check against. Site names are real
-locations; the yields, varieties and entries are invented, and nothing in either
-app should be read as a variety recommendation. Neither needs any package beyond
-`shiny` and `ggplot2`.
+## The data
+
+Both apps are loaded with **real published trial results**, redistributed by the
+[agridat][agridat] package (GPL-2) with the permission recorded in its help
+pages. `data-raw/extract.R` writes them out as the CSVs the apps read:
+
+| App | Data | Source |
+| --- | --- | --- |
+| `met` | 23 Western Australian spring wheat cultivars released 1860–1982, in 20 trials over 1979–82 | Perry & D'Antuono (1989), *Aust J Agric Res* 40:457–472 |
+| `trial` | 64 corn hybrids in six North Carolina counties, each an 18 × 11 plot lattice in 3 replicates | Besag & Higdon (1999), *JRSS-B* 61:691–746, Table 1 ([doi][besag1999]) |
+
+Both series are decades old and are here as worked examples; neither says
+anything about current varieties. Two things the real data forced, both of them
+honest about what published trial data is like:
+
+- The MET table has to be complete for the decomposition, so the five cultivars
+  with a missing trial are dropped rather than filled in. Yields are converted
+  from the published kg/ha to t/ha.
+- Each county is short the six plots it actually lost. They are left out, so a
+  field map has holes in it and a county carries 192 of its 198 grid positions.
+  Besag and Higdon do not state the unit yield was measured in, so the trial
+  app leaves the unit off its labels when a real trial is selected.
+
+The trial app also keeps **three simulated** trials, in their own group in the
+dropdown. They are generated from a known genetic effect, a known spatial trend
+and independent plot error, and they are the only place the true entry values
+exist — which is the only way to see how far the LSD, the repeatability and the
+neighbour correlation can be trusted on the six real fields, where there is
+nothing to check against. The comparison tab shows accuracy against the truth
+for those three and repeatability for the real ones.
+
+Neither app needs any package beyond `shiny` and `ggplot2`: `agridat` is a
+one-off dependency of `data-raw/extract.R`, and the CSVs it writes are
+committed.
 
 [smith2015]: https://doi.org/10.1007/s00122-014-2412-x
+[besag1999]: https://doi.org/10.1111/1467-9868.00201
+[agridat]: https://cran.r-project.org/package=agridat
 
 ## Run it with Docker
 
@@ -190,8 +240,9 @@ argument, so keep the four steps below in agreement.
 2. Add a service to `docker-compose.yml`, copying an existing one and changing
    `APP: <name>` and the service key, and list it under the proxy's
    `depends_on`.
-3. Add the two `location` blocks to `docker/nginx.conf` — the `= /<name>`
-   redirect and the `/<name>/` proxy.
+3. Add the two `location` blocks to `docker/app_routes.conf` — the `= /<name>`
+   redirect and the `/<name>/` proxy. That file is included by both the HTTP and
+   the HTTPS listener, so one edit covers both.
 4. Add a card to the `apps` list in `apps/hub/app.R` (name, subtitle, icon,
    and the `/<name>/` url).
 

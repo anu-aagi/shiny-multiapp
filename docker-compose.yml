@@ -31,7 +31,11 @@ services:
       - "${HTTP_PORT:-80}:80"
     volumes:
       - ./docker/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./docker/app_routes.conf:/etc/nginx/app_routes.conf:ro
       - ./docker/shiny_proxy.conf:/etc/nginx/shiny_proxy.conf:ro
+      # docker/nginx-tls.conf is deliberately not mounted: it needs a
+      # certificate that only exists on the deployed VM. Locally this serves
+      # plain HTTP, which is what HTTP_PORT publishes.
     depends_on:
       - hub
       - met

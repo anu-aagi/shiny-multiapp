@@ -1,57 +1,57 @@
-# A simulated trial series: ten sites over three harvest years, generated from
-# a known FA(2) process with a fixed seed. Site names are real locations; the
-# yields, varieties and loadings are invented.
+# A real trial series: 28 Western Australian spring wheat cultivars released
+# between 1860 and 1982, grown in 20 trials over four years in the central and
+# eastern wheatbelt.
+#
+#   Perry MW, D'Antuono MF (1989). Yield improvement and associated
+#   characteristics of some Australian spring wheat cultivars introduced
+#   between 1860 and 1982. Australian Journal of Agricultural Research
+#   40:457-472. Used with permission of Mario D'Antuono and CSIRO Publishing;
+#   redistributed in the agridat package.
+#
+# data-raw/extract.R writes the CSV: yields converted from kg/ha to t/ha, and
+# the five cultivars with a missing cell dropped so the variety-by-environment
+# table is complete -- the factor analytic decomposition is a singular value
+# decomposition and cannot be taken of a table with holes in it. That leaves 23
+# cultivars measured in every one of the 20 environments.
+#
+# An environment is a site by year combination. Wongan Hills was sown early and
+# late in 1979 and 1980, and the Merredin 1979 pair is probably the same, so
+# those labels carry a suffix. Site names are the source's three-letter codes.
 
-sites <- data.frame(
-  site   = c("Ginninderra", "Wagga Wagga", "Narrabri", "Horsham", "Katanning",
-             "Merredin", "Roseworthy", "Dalby", "Mingenew", "Tamworth"),
-  code   = c("GIN", "WAG", "NAR", "HOR", "KAT",
-             "MER", "ROS", "DAL", "MIN", "TAM"),
-  region = c("NSW South", "NSW South", "NSW North", "Victoria", "WA South",
-             "WA East", "SA", "Queensland", "WA North", "NSW North"),
-  base   = c(4.6, 5.1, 3.2, 4.3, 3.6, 2.2, 3.9, 2.8, 2.6, 3.4),
-  stringsAsFactors = FALSE
-)
+load_met <- function(path = data_path("perry-springwheat.csv")) {
+  d <- read.csv(path, stringsAsFactors = FALSE)
 
-simulate_met <- function() {
-  set.seed(20150128)
-
-  env <- expand.grid(year = years, site = sites$site, stringsAsFactors = FALSE)
-  env <- merge(env, sites, by = "site")
-  env <- env[order(env$region, env$site, env$year), ]
-  env$env <- paste0(env$code, substr(env$year, 3, 4))
+  env <- unique(d[, c("env_label", "env", "year", "site")])
+  names(env) <- c("env", "code", "year", "site")
+  env <- env[order(env$year, env$code), ]
   rownames(env) <- NULL
-  p <- nrow(env)
 
-  # Season effect: 2022 wet and kind, 2023 dry in the west.
-  season <- c(`2021` = 0.0, `2022` = 0.9, `2023` = -0.6)
-  west <- env$region %in% c("WA South", "WA East", "WA North", "SA")
-  env$mean_yield <- env$base + season[as.character(env$year)] +
-    ifelse(west & env$year == 2023, -0.5, 0) +
-    rnorm(p, 0, 0.28)
-  env$mean_yield <- pmax(env$mean_yield, 0.8)
+  variety <- sort(unique(d$gen))
+  Y <- matrix(NA_real_, length(variety), nrow(env),
+              dimnames = list(variety, env$env))
+  Y[cbind(match(d$gen, variety), match(d$env_label, env$env))] <- d$yield
+  stopifnot(!anyNA(Y))
 
-  # Factor 1 loadings scale with site productivity: high-yielding trials
-  # discriminate between varieties more strongly. Factor 2 separates the
-  # short-season western trials from the long-season eastern ones.
-  lam1 <- 0.04 + 0.085 * env$mean_yield + rnorm(p, 0, 0.025)
-  lam2 <- ifelse(west, 0.18, -0.13) + rnorm(p, 0, 0.07)
-  env$psi <- runif(p, 0.015, 0.075)   # environment-specific variance
+  # The trial mean, used to colour the loadings plot and to say how good a
+  # season each environment was.
+  env$mean_yield <- as.vector(colMeans(Y))
 
-  variety <- sprintf("V%02d", seq_len(n_var))
-  scores <- cbind(rnorm(n_var, 0, 1), rnorm(n_var, 0, 1))
+  # Year of release, one value per cultivar: this series was assembled to
+  # measure genetic gain, so it is worth carrying through to the table.
+  yor <- d$yor[match(variety, d$gen)]
+  names(yor) <- variety
 
-  eff <- scores %*% rbind(lam1, lam2) +
-    matrix(rnorm(n_var * p, 0, rep(sqrt(env$psi), each = n_var)), n_var, p)
-
-  Y <- sweep(eff, 2, env$mean_yield, "+")
-  dimnames(Y) <- list(variety, env$env)
-  list(Y = pmax(Y, 0.1), env = env, variety = variety)
+  list(Y = Y, env = env, variety = variety, yor = yor)
 }
 
-met <- simulate_met()
+met <- load_met()
 
-# Open on two strong performers and the least dependable variety, so the
+# The span of the series, read off the data rather than fixed, so replacing the
+# CSV with another series does not need these edited too.
+years <- sort(unique(met$env$year))
+n_var <- length(met$variety)
+
+# Open on two strong performers and the least dependable cultivar, so the
 # contrast the app is about is visible before anything is clicked.
 default_varieties <- local({
   f <- fa_fit(met$Y, 2)

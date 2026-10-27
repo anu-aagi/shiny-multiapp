@@ -1,0 +1,33 @@
+# MET Explorer.
+#
+# The fixed IP is not cosmetic. nginx resolves the app hostnames once when it
+# starts and caches the result for the life of the process, so a container that
+# comes back on a different address leaves the proxy sending traffic into the
+# void -- 502s on every route with three healthy apps running. Pinning the
+# address means a restart, a rebuild or a reboot cannot invalidate that cache.
+#
+# RunInit=yes puts an init process at PID 1 instead of R. Linux applies no
+# default signal disposition to PID 1, and R installs no SIGTERM handler, so
+# without it every stop ignores the signal, waits out the ten second timeout
+# and ends in SIGKILL -- killing live user sessions rather than closing them.
+# (The key is RunInit here, not the Init= that docker-compose.yml uses.
+# Quadlet discards a whole unit when it meets a key it does not know.)
+
+[Unit]
+Description=MET Explorer Shiny application
+After=network-online.target
+Wants=network-online.target
+
+[Container]
+ContainerName=met
+Image=localhost/shiny-met:latest
+Network=shiny.network
+IP=172.30.17.12
+RunInit=yes
+
+[Service]
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target default.target
